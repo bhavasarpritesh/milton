@@ -1,0 +1,30 @@
+apiVersion: karpenter.sh/v1alpha5
+kind: Provisioner
+metadata:
+  name: worker-provisioner
+spec:
+  providerRef:
+    name: worker-provider
+  labels:
+    role: worker
+    provisionedBy: karpenter
+  requirements:
+    - key: "topology.kubernetes.io/zone"
+      operator: In
+      values: ["af-south-1a","af-south-1b"]
+    - key: "kubernetes.io/arch"
+      operator: In
+      values: ["amd64"]
+    - key: "karpenter.sh/capacity-type"
+      operator: In
+      values: ["spot","on-demand"]
+    - key: "karpenter.k8s.aws/instance-cpu"
+      operator: In
+      values: ["2","4","8"]
+  limits:
+    resources:
+      cpu: 6
+      memory: 24Gi
+  consolidation:
+    enabled: true
+  ttlSecondsUntilExpired: 604800 # 7 Days = 60 * 60 * 24 * 7 Seconds;
