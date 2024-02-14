@@ -1,0 +1,17 @@
+# Source: karpenter-provisioners/templates/platform-node-provisioner.yaml
+apiVersion: karpenter.k8s.aws/v1alpha1
+kind: AWSNodeTemplate
+metadata:
+  name: platform-provider
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: karpenter-provisioners
+    meta.helm.sh/release-namespace: karpenter
+spec:
+  subnetSelector:
+    Name: "*Private*"
+  securityGroupSelector:
+    Name: "*-workers-sg"
+  instanceProfile: "karpenter-instance-profile"
+  amiFamily: Bottlerocket
