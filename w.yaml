@@ -1,30 +1,60 @@
+# Source: karpenter-provisioners/templates/worker-node-provisioner.yaml
 apiVersion: karpenter.sh/v1alpha5
 kind: Provisioner
 metadata:
   name: worker-provisioner
 spec:
+  # References cloud provider-specific custom resource, see your cloud provider specific documentation
   providerRef:
     name: worker-provider
+
+  # Labels are arbitrary key-values that are applied to all nodes
   labels:
     role: worker
     provisionedBy: karpenter
+
+  # Requirements that constrain the parameters of provisioned nodes.
+  # These requirements are combined with pod.spec.affinity.nodeAffinity rules.
+  # Operators { In, NotIn } are supported to enable including or excluding values
   requirements:
+
+
+
     - key: "topology.kubernetes.io/zone"
       operator: In
       values: ["af-south-1a","af-south-1b"]
+
+
     - key: "kubernetes.io/arch"
       operator: In
       values: ["amd64"]
-    - key: "karpenter.sh/capacity-type"
+
+
+    - key: "karpenter.sh/capacity-type" # If not included, the webhook for the AWS cloud provider will default to on-demand
       operator: In
       values: ["spot","on-demand"]
+
+
     - key: "karpenter.k8s.aws/instance-cpu"
       operator: In
       values: ["2","4","8"]
+
+
+
+  # Resource limits constrain the total size of the cluster.
+  # Limits prevent Karpenter from creating new instances once the limit is exceeded.
+
   limits:
     resources:
       cpu: 6
       memory: 24Gi
+
+
+  # Enables consolidation which attempts to reduce cluster cost by both removing un-needed nodes and down-sizing those
+  # that can't be removed.  Mutually exclusive with the ttlSecondsAfterEmpty parameter.
   consolidation:
     enabled: true
+
+  # If omitted, the feature is disabled and nodes will never expire.  If set to less time than it requires for a node
+  # to become ready, the node may expire before any pods successfully start.
   ttlSecondsUntilExpired: 604800 # 7 Days = 60 * 60 * 24 * 7 Seconds;
